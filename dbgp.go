@@ -62,6 +62,57 @@ type xProp struct {
 	Children    []xProp `xml:"property"`
 }
 
+// UnmarshalXMLAttr decodes the numchildren attribute leniently: surrounding
+// spaces are trimmed as encoding/xml does for int fields, and a malformed,
+// negative or out-of-range value falls back to 0 instead of failing the whole
+// response, and
+// summarize then reports len(p.Children). Real Xdebug always emits a valid
+// integer, but other engines occasionally do not (issue #100). UnmarshalXML
+// calls it for every attribute of a property element.
+func (p *xProp) UnmarshalXMLAttr(attr xml.Attr) error {
+	if attr.Name.Local != "numchildren" {
+		return nil
+	}
+	n, err := strconv.Atoi(strings.TrimSpace(attr.Value))
+	if err != nil || n < 0 {
+		return nil
+	}
+	p.NumChildren = n
+	return nil
+}
+
+// UnmarshalXML implements xml.Unmarshaler, so encoding/xml calls it for every
+// property element, nested ones included (Children is []xProp). It decodes the
+// other fields through a local struct without numchildren, so the decoder never
+// parses that attribute as an int, and it takes NumChildren from
+// UnmarshalXMLAttr. A plain DecodeElement into xProp would call UnmarshalXML
+// again and recurse.
+func (p *xProp) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	for _, attr := range start.Attr {
+		if err := p.UnmarshalXMLAttr(attr); err != nil {
+			return err
+		}
+	}
+	var field struct {
+		Name        string  `xml:"name,attr"`
+		Type        string  `xml:"type,attr"`
+		Encoding    string  `xml:"encoding,attr"`
+		HasChildren string  `xml:"children,attr"`
+		Value       string  `xml:",chardata"`
+		Children    []xProp `xml:"property"`
+	}
+	if err := d.DecodeElement(&field, &start); err != nil {
+		return err
+	}
+	p.Name = field.Name
+	p.Type = field.Type
+	p.Encoding = field.Encoding
+	p.HasChildren = field.HasChildren
+	p.Value = field.Value
+	p.Children = field.Children
+	return nil
+}
+
 type xBkpt struct {
 	ID       string `xml:"id,attr"`
 	Type     string `xml:"type,attr"`
