@@ -408,7 +408,7 @@ func TestRawLockedTooManySkippedPackets(t *testing.T) {
 	s.startReader(conn, s.r)
 	go func() {
 		eng.readCmd()
-		for i := 0; i <= maxSkippedPackets; i++ {
+		for i := 0; i < maxSkippedPackets; i++ {
 			eng.send(xmlProlog + `<stream type="stdout" encoding="base64">T1VUCg==</stream>`)
 		}
 	}()
