@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"os"
+	"path/filepath"
 	"runtime/debug"
 	"strings"
 	"testing"
@@ -61,6 +63,34 @@ func TestMCPSessionUsesTheListenAddrAndPort(t *testing.T) {
 	}
 	if s.localRoot != "/tmp/app" || s.dockerRoot != "/var/www/app" {
 		t.Errorf("roots = %q, %q, want /tmp/app, /var/www/app", s.localRoot, s.dockerRoot)
+	}
+}
+
+func TestMCPSessionMakesTheRootsAbsolute(t *testing.T) {
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, tc := range map[string]struct{ local, docker, wantLocal, wantErr string }{
+		"empty local root":     {"", "/var/www/app", wd, ""},
+		"relative local root":  {"example", "/var/www/app", filepath.Join(wd, "example"), ""},
+		"relative docker root": {"/host/app", "www/app", "", "invalid --docker-root"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			s, err := mcpSession("127.0.0.1", "9071", tc.local, tc.docker)
+			if tc.wantErr != "" {
+				if err == nil || !strings.Contains(err.Error(), tc.wantErr) {
+					t.Fatalf("mcpSession = %v, want an error containing %q", err, tc.wantErr)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("mcpSession: %v", err)
+			}
+			if s.localRoot != tc.wantLocal {
+				t.Fatalf("localRoot = %q, want %q", s.localRoot, tc.wantLocal)
+			}
+		})
 	}
 }
 
