@@ -94,6 +94,24 @@ func TestMCPSessionMakesTheRootsAbsolute(t *testing.T) {
 	}
 }
 
+func TestMCPSessionRejectsTheLocalRootWhenTheWorkingDirectoryIsGone(t *testing.T) {
+	// A removed working directory makes os.Getwd fail, so an empty or relative
+	// --local-root cannot be made absolute and must be an error, not ".".
+	dir := t.TempDir()
+	t.Chdir(dir)
+	if err := os.Remove(dir); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Getwd(); err == nil {
+		t.Skip("os.Getwd still works after the working directory was removed")
+	}
+	for _, local := range []string{"", "example"} {
+		if _, err := mcpSession("127.0.0.1", "9071", local, "/var/www/app"); err == nil || !strings.Contains(err.Error(), "invalid --local-root") {
+			t.Errorf("mcpSession(local %q) = %v, want an error containing %q", local, err, "invalid --local-root")
+		}
+	}
+}
+
 func TestBadListenAddrFailsBeforeTheServerStarts(t *testing.T) {
 	// RunE builds the session before serving, so an address the listener cannot
 	// use is reported and nothing starts — on the mcp subcommand too, which
