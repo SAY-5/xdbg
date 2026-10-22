@@ -607,7 +607,7 @@ func (s *session) rawLocked(name, args string) (*xResp, string, error) {
 	var r xResp
 	var xmlStr string
 	for skipped := 0; ; skipped++ {
-		if skipped > maxSkippedPackets {
+		if skipped >= maxSkippedPackets {
 			return nil, "", fmt.Errorf("%s: no response with transaction_id %s after %d other packets", name, want, maxSkippedPackets)
 		}
 		var err error
@@ -813,7 +813,7 @@ func (s *session) readLoop(conn net.Conn, r *bufio.Reader) {
 		}
 		log.Printf("dropping DBGp packet while waiting: <%s transaction_id=%q>", resp.XMLName.Local, resp.TransactionID)
 		skipped++
-		if skipped > maxSkippedPackets {
+		if skipped >= maxSkippedPackets {
 			s.failWaiters(conn, func(tx int) error {
 				return fmt.Errorf("no response with transaction_id %d after %d other packets", tx, maxSkippedPackets)
 			}, "")
