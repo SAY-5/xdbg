@@ -187,8 +187,8 @@ Reconnect MCP in Claude Code. Tools appear as `mcp__xdbg__*`.
 |---|---|---|
 | `--dbg-port` | `9003` | Port Xdebug dials into (the listener binds `<listen-addr>:<port>`) |
 | `--listen-addr` | `0.0.0.0` | Address the DBGp listener binds to, as an IP literal (e.g. `127.0.0.1`, `172.17.0.1`, `::1`) |
-| `--local-root` | — | Host project root (for path translation) |
-| `--docker-root` | `""` (empty) | Container project root; empty disables path translation (host and container paths are the same) |
+| `--local-root` | current directory | Host project root (for path translation); a relative value resolves against the current directory |
+| `--docker-root` | `""` (empty) | Container project root, as an absolute container path; empty disables path translation (host and container paths are the same) |
 | `--xdebug-enable-cmd` | — | Shell command to enable Xdebug in the container |
 | `--xdebug-disable-cmd` | — | Shell command to disable Xdebug in the container |
 | `--xdebug-status-cmd` | — | Shell command to check Xdebug status in the container |

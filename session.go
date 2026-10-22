@@ -110,8 +110,10 @@ type session struct {
 	dbgAddr string       // "host:port" where Xdebug connects (e.g. "0.0.0.0:9003")
 	ln      net.Listener // non-nil only while the ephemeral listener is open
 
+	// Configured roots must be absolute (mcpSession resolves or rejects them),
+	// or path.Join builds a relative breakpoint file URI (#78).
 	localRoot  string
-	dockerRoot string
+	dockerRoot string // empty: no path translation
 
 	enableCmd  string // shell command to enable Xdebug in the container
 	disableCmd string

@@ -103,7 +103,7 @@ func newRootCmd() *cobra.Command {
 			s.disableCmd = xdebugDisableCmd
 			s.statusCmd = xdebugStatusCmd
 			s.containerExec = containerExec
-			s.projectDir = localRoot
+			s.projectDir = s.localRoot
 			log.Printf("MCP stdio server ready (xdbg tools)")
 			newMCP(s).serve()
 			return nil
