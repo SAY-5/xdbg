@@ -176,8 +176,8 @@ adapted to your client's MCP configuration format.
 |---|---|---|
 | `--dbg-port` | `9003` | Port Xdebug connects to (the listener binds `<listen-addr>:<port>`) |
 | `--listen-addr` | `0.0.0.0` | Address the DBGp listener binds to, as an IP literal (e.g. `127.0.0.1`, `172.17.0.1`, `::1`) |
-| `--local-root` | — | Host project root — used for host-to-container path translation |
-| `--docker-root` | — | Container project root — used for container-to-host path translation |
+| `--local-root` | current directory | Host project root — used for host-to-container path translation; a relative value resolves against the current directory |
+| `--docker-root` | — | Container project root, as an absolute container path — used for container-to-host path translation |
 | `--xdebug-enable-cmd` | — | Shell command to enable Xdebug in the container |
 | `--xdebug-disable-cmd` | — | Shell command to disable Xdebug in the container |
 | `--xdebug-status-cmd` | — | Shell command to check Xdebug status in the container |

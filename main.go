@@ -13,6 +13,8 @@ import (
 	"log"
 	"net"
 	"os"
+	"path"
+	"path/filepath"
 	"regexp"
 	"runtime/debug"
 	"strings"
@@ -101,7 +103,7 @@ func newRootCmd() *cobra.Command {
 			s.disableCmd = xdebugDisableCmd
 			s.statusCmd = xdebugStatusCmd
 			s.containerExec = containerExec
-			s.projectDir = localRoot
+			s.projectDir = s.localRoot
 			log.Printf("MCP stdio server ready (xdbg tools)")
 			newMCP(s).serve()
 			return nil
@@ -134,11 +136,22 @@ func newRootCmd() *cobra.Command {
 
 // mcpSession builds the session the mcp command runs with. The listen address
 // the flags carry becomes the session's bind address here, in one place a test
-// can observe without starting the server.
+// can observe without starting the server. The roots are made absolute here
+// too: a relative or empty --local-root is resolved against the working
+// directory, and --docker-root has nothing to resolve against, so a relative
+// value is rejected. Otherwise path.Join yields a relative breakpoint file URI
+// that Xdebug never matches.
 func mcpSession(listenAddr, dbgPort, localRoot, dockerRoot string) (*session, error) {
 	addr, err := dbgListenAddr(listenAddr, dbgPort)
 	if err != nil {
 		return nil, err
+	}
+	localRoot, err = filepath.Abs(localRoot)
+	if err != nil {
+		return nil, fmt.Errorf("invalid --local-root: %w", err)
+	}
+	if dockerRoot != "" && !path.IsAbs(dockerRoot) {
+		return nil, fmt.Errorf("invalid --docker-root %q: must be an absolute container path", dockerRoot)
 	}
 	s := newSession(localRoot, dockerRoot)
 	s.dbgAddr = addr
